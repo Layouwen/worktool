@@ -6,7 +6,6 @@ import android.view.WindowManager
 import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatActivity
 import com.blankj.utilcode.util.*
-import com.umeng.analytics.MobclickAgent
 import kotlinx.android.synthetic.main.activity_listen.*
 import org.yameida.worktool.*
 import android.content.*
@@ -75,17 +74,8 @@ class ListenActivity : AppCompatActivity() {
         iv_settings.setOnClickListener {
             SettingsActivity.enterActivity(this)
         }
-        et_channel.setText(Constant.robotId)
-        bt_save.setOnClickListener {
-            val channel = et_channel.text.toString().trim()
-            Constant.robotId = channel
-            ToastUtils.showLong("保存成功")
-            sendBroadcast(Intent(Constant.WEWORK_NOTIFY).apply {
-                putExtra("type", "modify_channel")
-            })
-            HttpUtil.getMyConfig(toast = false)
-            MobclickAgent.onProfileSignIn(channel)
-        }
+        // 首次读取时自动生成并持久化内部设备标识。
+        Constant.robotId
         tv_host.text = Constant.host
         tv_host.setOnClickListener {
             showSelectHostDialog()
@@ -133,10 +123,7 @@ class ListenActivity : AppCompatActivity() {
         sw_accessibility.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
             LogUtils.i("sw_accessibility onCheckedChanged: $isChecked")
             if (isChecked) {
-                if (Constant.robotId.isBlank()) {
-                    sw_accessibility.isChecked = false
-                    ToastUtils.showLong("请先填写并保存链接号~")
-                } else if (!PermissionHelper.isAccessibilitySettingOn()) {
+                if (!PermissionHelper.isAccessibilitySettingOn()) {
                     if (SPUtils.getInstance().getBoolean("risk", false)) {
                         if (riskRetry > 10) {
                             ToastUtils.showLong("再点${20 - riskRetry}次 允许本次运行")
@@ -185,8 +172,6 @@ class ListenActivity : AppCompatActivity() {
     }
 
     private fun initData() {
-        HttpUtil.checkUpdate()
-        HttpUtil.getMyConfig(toast = false)
         CacheUtil.autoDelete()
     }
 
@@ -204,7 +189,7 @@ class ListenActivity : AppCompatActivity() {
         }, Context.BIND_AUTO_CREATE)
         //开启屏幕录制权限
         if (MediaProjectionHolder.mMediaProjection == null) {
-            bt_save.postDelayed({
+            window.decorView.postDelayed({
                 fastStartActivity(this, GetScreenShotActivity::class.java)
             }, 1000)
         }
@@ -280,8 +265,8 @@ class ListenActivity : AppCompatActivity() {
                 .setNegativeButton("", null)
                 .setPositiveButton("", null)
         val show = positiveButton.show()
-        bt_save.postDelayed({ show.dismiss() }, 5000)
-        bt_save.postDelayed({
+        window.decorView.postDelayed({ show.dismiss() }, 5000)
+        window.decorView.postDelayed({
             packageManager.getLaunchIntentForPackage(Constant.PACKAGE_NAMES)?.apply {
                 this.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(this)

@@ -4,119 +4,12 @@ import com.blankj.utilcode.util.*
 import com.lzy.okgo.OkGo
 import com.lzy.okgo.callback.StringCallback
 import com.lzy.okgo.model.Response
-import model.UpdateConfig
 import org.json.JSONObject
 import org.yameida.worktool.Constant
-import org.yameida.worktool.R
-import org.yameida.worktool.model.network.CheckUpdateResult
-import org.yameida.worktool.model.network.GetMyConfigResult
 import org.yameida.worktool.service.log
-import org.yameida.worktool.utils.envcheck.CheckRoot
-import update.UpdateAppUtils
 import java.io.File
 
 object HttpUtil {
-
-    /**
-     * 检查更新
-     */
-    fun checkUpdate(url: String? = null) {
-        OkGo.get<String>(url ?: Constant.getCheckUpdateUrl())
-            .execute(object : StringCallback() {
-                override fun onSuccess(response: Response<String>) {
-                    try {
-                        val commonResult =
-                            GsonUtils.fromJson(
-                                response.body(),
-                                CheckUpdateResult::class.java
-                            )
-                        if (commonResult.code != 200) {
-                            return onError(response)
-                        }
-                        LogUtils.i(commonResult.data)
-                        commonResult.data?.apply {
-                            if (AppUtils.getAppVersionCode() < this.versionCode) {
-                                UpdateAppUtils
-                                    .getInstance()
-                                    .apkUrl(this.downloadUrl)
-                                    .updateTitle(this.title)
-                                    .updateContent(this.updateLog.replace("\\n", "\n"))
-                                    .updateConfig(
-                                        UpdateConfig(
-                                            force = AppUtils.getAppVersionCode() < this.minVersionCode,
-                                            serverVersionName = this.versionName,
-                                            serverVersionCode = this.versionCode,
-                                            isShowNotification = false
-                                        )
-                                    )
-                                    .update()
-                            } else {
-                                ToastUtils.showShort(R.string.update_no_update)
-                            }
-                            return
-                        }
-                    } catch (e: Exception) {
-                        LogUtils.e(e)
-                        onError(response)
-                    }
-                }
-
-                override fun onError(response: Response<String>) {
-                    ToastUtils.showLong(R.string.update_failed)
-                    LogUtils.e("检查更新失败")
-                }
-            })
-    }
-
-    /**
-     * 获取机器人配置
-     */
-    fun getMyConfig(toast: Boolean = true) {
-        if (Constant.robotId.isBlank()) {
-            if (toast) {
-                ToastUtils.showLong("请先填写机器人ID")
-            }
-            return
-        }
-        OkGo.get<String>(Constant.getMyConfig())
-            .execute(object : StringCallback() {
-                override fun onSuccess(response: Response<String>) {
-                    try {
-                        val commonResult =
-                            GsonUtils.fromJson(
-                                response.body(),
-                                GetMyConfigResult::class.java
-                            )
-                        if (commonResult.code != 200) {
-                            return onError(response)
-                        }
-                        LogUtils.i("获取配置", commonResult.data)
-                        SPUtils.getInstance().put("risk", false)
-                        if (CheckRoot.isDeviceRooted()) {
-                            val date = TimeUtils.string2Date(commonResult.data.createTime, "yyyy-MM-dd'T'HH:mm:ss")
-                            if (System.currentTimeMillis() - date.time < 15 * 68400 * 1000) {
-                                LogUtils.e("环境监测异常，请勿使用本应用！")
-                                ToastUtils.showLong("环境监测异常，请勿使用本应用！")
-                                SPUtils.getInstance().put("risk", true)
-                            }
-                        }
-                        commonResult.data?.apply {
-                            Constant.qaUrl = this.callbackUrl ?: ""
-                            Constant.openCallback = this.openCallback ?: 0
-                            Constant.replyStrategy = (this.replyAll ?: 0) + 1
-                        }
-                    } catch (e: Exception) {
-                        LogUtils.e(e)
-                        onError(response)
-                    }
-                }
-
-                override fun onError(response: Response<String>) {
-                    ToastUtils.showLong("获取配置失败 请检查机器人ID")
-                    LogUtils.e("获取配置失败 请检查机器人ID")
-                }
-            })
-    }
 
     /**
      * 推送图片

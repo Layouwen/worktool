@@ -1,6 +1,7 @@
 package org.yameida.worktool
 
 import com.blankj.utilcode.util.SPUtils
+import java.util.UUID
 
 object Constant {
 
@@ -14,7 +15,9 @@ object Constant {
     var LONG_INTERVAL = BASE_LONG_INTERVAL
     var CHANGE_PAGE_INTERVAL = BASE_CHANGE_PAGE_INTERVAL
     var POP_WINDOW_INTERVAL = BASE_POP_WINDOW_INTERVAL
-    private const val DEFAULT_HOST = "wss://api.worktool.ymdyes.cn"
+    private const val DEFAULT_HOST = "ws://192.168.1.57:8890"
+    private const val LEGACY_LOCAL_HOST = "wss://192.168.1.57:8888"
+    private const val LEGACY_LOCAL_TLS_HOST = "wss://192.168.1.57:8890"
 
     var version = Int.MAX_VALUE
     var myName = ""
@@ -84,7 +87,16 @@ object Constant {
         get() = SPUtils.getInstance().getBoolean("customMP", false)
         set(value) = SPUtils.getInstance().put("customMP", value)
     var robotId: String
-        get() = SPUtils.getInstance().getString("robotId", SPUtils.getInstance().getString("LISTEN_CHANNEL_ID", ""))
+        get() {
+            val preferences = SPUtils.getInstance()
+            val savedRobotId = preferences.getString("robotId", preferences.getString("LISTEN_CHANNEL_ID", ""))
+            if (savedRobotId.isNotBlank()) {
+                return savedRobotId
+            }
+            return UUID.randomUUID().toString().replace("-", "").also {
+                preferences.put("robotId", it)
+            }
+        }
         set(value) {
             SPUtils.getInstance().put("robotId", value)
         }
@@ -105,7 +117,22 @@ object Constant {
             SPUtils.getInstance().put("openCallback", value)
         }
     var host: String
-        get() = SPUtils.getInstance().getString("host", DEFAULT_HOST)
+        get() {
+            val preferences = SPUtils.getInstance()
+            val savedHost = preferences.getString("host", DEFAULT_HOST)
+            if (savedHost != LEGACY_LOCAL_HOST && savedHost != LEGACY_LOCAL_TLS_HOST) {
+                return savedHost
+            }
+            preferences.put("host", DEFAULT_HOST)
+            val hostList = preferences.getStringSet("host_list", mutableSetOf()).toMutableSet()
+            val removedLegacyHost = hostList.remove(LEGACY_LOCAL_HOST)
+            val removedLegacyTlsHost = hostList.remove(LEGACY_LOCAL_TLS_HOST)
+            if (removedLegacyHost || removedLegacyTlsHost) {
+                hostList.add(DEFAULT_HOST)
+                preferences.put("host_list", hostList)
+            }
+            return DEFAULT_HOST
+        }
         set(value) {
             SPUtils.getInstance().put("host", value)
         }
@@ -122,12 +149,6 @@ object Constant {
         }
 
     fun getWsUrl() = "$host/webserver/wework/$robotId"
-
-    fun getCheckUpdateUrl() = "${getBaseUrl()}/appUpdate/checkUpdate"
-
-    fun getMasterCheckUpdateUrl() = "https://worktool.asrtts.cn/appUpdate/checkUpdate"
-
-    fun getMyConfig() = "${getBaseUrl()}/robot/robotInfo/get?robotId=$robotId"
 
     fun getRobotUpdateUrl() = "${getBaseUrl()}/robot/robotInfo/update?robotId=$robotId"
 

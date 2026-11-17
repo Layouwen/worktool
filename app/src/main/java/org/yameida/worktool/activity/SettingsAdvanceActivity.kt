@@ -44,7 +44,6 @@ class SettingsAdvanceActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings_advance)
 
         initView()
-        initData()
     }
 
     private fun initView() {
@@ -84,10 +83,6 @@ class SettingsAdvanceActivity : AppCompatActivity() {
         rl_schema.setOnClickListener { showSchemaDialog() }
         rl_username.setOnClickListener { showUserNameDialog() }
         rl_signature.setOnClickListener { showSignatureDialog() }
-    }
-
-    private fun initData() {
-        HttpUtil.getMyConfig()
     }
 
     private fun showQaUrlDialog() {

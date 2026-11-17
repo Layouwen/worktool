@@ -39,8 +39,6 @@ dependencies {
     api 'com.google.code.gson:gson:2.8.5'
     //网络
     api 'com.github.bumptech.glide:okhttp3-integration:4.9.0'
-    //自动更新
-    api 'com.teprinciple:updateapputilsx:2.3.0'
     //okgo
     api 'com.lzy.net:okgo:3.0.4'
     //qrcode

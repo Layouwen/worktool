@@ -17,7 +17,6 @@ import org.yameida.worktool.config.GlobalException
 import org.yameida.worktool.notification.PlayNotifyManager
 import org.yameida.worktool.utils.IWWAPIUtil
 import org.yameida.worktool.utils.LogUtilsInit
-import update.UpdateAppUtils
 
 class MyApplication : Application() {
 
@@ -57,8 +56,6 @@ class MyApplication : Application() {
         TalkingDataSDK.init(this, "80E9C84E39904DAFB28562910FF7C86C", getString(R.string.app_name) + "_master", Constant.robotId)
         //初始化企业微信sdk
         IWWAPIUtil.init(this)
-        //初始化自动更新
-        UpdateAppUtils.init(this)
         //初始化前台服务
         PlayNotifyManager.show()
         //设置全局异常捕获重启

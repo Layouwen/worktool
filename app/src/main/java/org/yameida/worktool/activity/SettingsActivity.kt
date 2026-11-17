@@ -44,7 +44,6 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         initView()
-        initData()
     }
 
     override fun onResume() {
@@ -69,7 +68,6 @@ class SettingsActivity : AppCompatActivity() {
         })
         rl_reply_strategy.setOnClickListener { showReplyStrategyDialog() }
         rl_log.setOnClickListener { showLogDialog() }
-        rl_update.setOnClickListener { showUpdateDialog() }
         rl_donate.setOnClickListener { showDonateDialog() }
         rl_share.setOnClickListener { showShareDialog() }
         rl_advance.setOnClickListener { SettingsAdvanceActivity.enterActivity(this) }
@@ -99,17 +97,11 @@ class SettingsActivity : AppCompatActivity() {
                     freshOpenMain()
                 }
             } else {
-                if (Constant.robotId.isBlank()) {
-                    ToastUtils.showLong("请先填写并保存链接号~")
-                } else if (!PermissionHelper.isAccessibilitySettingOn()) {
+                if (!PermissionHelper.isAccessibilitySettingOn()) {
                     startActivity(Intent(this, AccessibilityGuideActivity::class.java))
                 }
             }
         }
-    }
-
-    private fun initData() {
-        HttpUtil.getMyConfig()
     }
 
     private fun showReplyStrategyDialog() {
@@ -145,25 +137,6 @@ class SettingsActivity : AppCompatActivity() {
                 .show()
         } else {
             ToastUtils.showLong("日志文件夹为空~")
-        }
-    }
-
-    private fun showUpdateDialog() {
-        if (Constant.getMasterCheckUpdateUrl() == Constant.getCheckUpdateUrl()) {
-            HttpUtil.checkUpdate()
-        } else {
-            QMUIDialog.CheckableDialogBuilder(this)
-                .setTitle("检查新版本")
-                .addItems(arrayOf("检查当前Host新版本", "检查${getString(R.string.app_name)}官方新版本")) { dialog, which ->
-                    dialog.dismiss()
-                    if (which == 0) {
-                        HttpUtil.checkUpdate()
-                    } else {
-                        HttpUtil.checkUpdate(Constant.getMasterCheckUpdateUrl())
-                    }
-                }
-                .create(R.style.QMUI_Dialog)
-                .show()
         }
     }
 

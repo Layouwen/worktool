@@ -1,10 +1,7 @@
 package org.yameida.worktool.service
 
 import android.accessibilityservice.AccessibilityService
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.FileObserver
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
@@ -50,16 +47,6 @@ class WeworkService : AccessibilityService() {
         //开发者可以在这里添加测试代码 启动时调用一次
         thread { Demo.test(AppUtils.isAppDebug()) }
 
-        //监听是否修改链接号并重新长连接
-        registerReceiver(object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.getStringExtra("type") == "modify_channel") {
-                    LogUtils.e("更新channel")
-                    webSocketManager.close(1000, "modify_channel")
-                    initWebSocket()
-                }
-            }
-        }, IntentFilter(Constant.WEWORK_NOTIFY))
     }
 
     private fun initWebSocket() {
